@@ -1,0 +1,28 @@
+---
+title: "Admit To Deposit: Initial Exploration"
+author: "Office of Marketing and Brand Management"
+date: "8/25/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Description
+
+![Year over year, admission to deposit flow has remained consistent for the last three years. Admissions have a three month peak starting in November lasting through February and then decline slowly until September.](C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/Start.png)
+
+## Average number of months between admission and confirmation.
+
+![The admission date flow varies slightly among the three age cohorts. Most apps are submitted in December and January among HS  students. Transfer age appears to peak a little later. Working Aadults peaks in July/August and January. ](C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/Number of Apps Submitted among Deposited.png)
+
+
+![Arranged by months in fiscaal year. As one would expect, the avereage number of months between admission and confirmation is largely dependent on the due date of the deposit. ](C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/lollipop.png)
+
+![The interval between admission and deposit has remained _consistent____ for the last 3 fall starts. ](C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/AverageNumberofMonthsBetween.png)
+
+
+![Last 2 tables visualized together.](C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/Last2.png)
+\href{https://public.tableau.com/profile/christine.iyer#!/vizhome/Admission_to_Deposit_Fall_UG_Only/AdmissiontoDeposit?publish=yes}{{\color{blue}{\underline{Tableau interactive visualization}}}}
+

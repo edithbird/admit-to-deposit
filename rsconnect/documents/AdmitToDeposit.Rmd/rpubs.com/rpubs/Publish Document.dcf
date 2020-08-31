@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/648798/384540a3404d40749db3556e14b35805
+bundleId: https://api.rpubs.com/api/v1/document/648798/384540a3404d40749db3556e14b35805
+url: http://rpubs.com/Marketing/648798
+when: 1597861308.12177

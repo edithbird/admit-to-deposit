@@ -1,0 +1,432 @@
+---
+title: "Application to Deposit"
+author: "Christine Iyer"
+date: "8/11/2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	message = FALSE,
+	warning = FALSE,
+	include = FALSE
+)
+```
+
+```{r}
+library(tidyverse)
+library(plotly)
+library(patchwork)
+```
+
+
+
+```{r data}
+data <- read.csv("C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/report1597152430550.csv", header = T, stringsAsFactors = F)
+
+data <- data %>% filter(Admit.Date != "")
+```
+
+## Basic Description
+
+The purpose of this report is to look at how much time elapses between when undergraduate students are admitted and when they pay their deposits to confirm their spot. Because there different groups of students behave differently, I have segmented them into 3 groups - __Traditional HS Students__: 18 and under
+
+__Older First-Year Entrants__: 19-25
+
+__Working Adults__: Over 25
+
+It is important to note that I deleted incoming undergraduates who took longer than 30 weeks to pay a deposit. The outliers were skewing the data visualizations.
+
+
+
+```{r}
+Apps <- data %>% 
+  mutate_at(
+    vars("Birthdate", "App.Application.Date","Admit.Date","App.Deposit.Date"), 
+    as.POSIXct,
+    format = "%m/%d/%Y"
+    )
+
+
+```
+
+```{r}
+
+c <- c("Enrolled","Withdrawn (After Confirmed)", "Confirmed")
+Apps1 <- Apps %>% filter(Application.Status %in% c)
+
+d <- c("Fall 2017", "Fall 2018", "Fall 2019","Fall 2020"
+       # , "Spring 2018","Spring 2019", "Spring 2020","Summer 2018","Summer 2019","Summer 2020"
+       )
+Apps2 <- Apps1 %>% filter(Anticipated.Start.Term.Year %in% d ) %>% arrange(App.Deposit.Date)
+
+```
+
+```{r}
+Apps3 <- Apps2 %>% arrange(Anticipated.Start.Term.Year) %>% select(Anticipated.Start.Term.Year, Admit.Date, App.Deposit.Date, Birthdate)%>%  mutate(wksBtn = round(difftime(App.Deposit.Date, Admit.Date, units = "weeks"),0), AgeAtAdmission = round(difftime(Admit.Date, Birthdate, units = "weeks"),0)) 
+```
+
+```{r}
+Apps4 <- Apps3 %>% 
+  mutate(
+    Admit = strftime(Admit.Date, "%B"),
+    #Admit = as.character.Date(Admit, format = "%B"),
+    Deposit = strftime(App.Deposit.Date, "%B"),
+    #Deposit = as.character.Date(Deposit, format = "%m-%Y"),
+    wksBtn = as.numeric(wksBtn), 
+    AgeAtAdmission = round(as.numeric(AgeAtAdmission)/52,0),
+    AgeGroup = ifelse(AgeAtAdmission < 19, "18 and Under", 
+                      ifelse(AgeAtAdmission >=19 & AgeAtAdmission< 26, "19-25", "26 and over")))%>% 
+    #,
+    #Birthdate = strftime(Birthdate, "%m-%Y"),
+    #AgeAtAdmission = str_split(AgeAtAdmission, 1,3)
+   
+  group_by(Anticipated.Start.Term.Year, Admit.Date, App.Deposit.Date, wksBtn, AgeAtAdmission, Admit, Deposit, AgeGroup) %>% 
+  summarise(count = n()) %>% 
+  na.omit() %>% 
+  filter(wksBtn>=1 & wksBtn<50)
+# Apps4_V1$Admit <-  factor(Apps4_V1$Admit, levels = c("September", "October", "November", "December","January", "February", "March", "April", "May", "June", "July", "August"))
+
+Apps4$Admit <-  factor(Apps4$Admit, levels = c("September", "October", "November", "December","January", "February", "March", "April", "May", "June", "July", "August"))
+Apps4_V1 <- Apps4 %>% 
+  arrange(desc(count)) %>% 
+  group_by(AgeGroup, Anticipated.Start.Term.Year, Admit) %>% 
+  summarise(
+    Min = min(wksBtn), 
+    Max = max(wksBtn), 
+    Average = round(mean(wksBtn,0)), 
+    n = n()
+  
+)
+
+Apps5 <- Apps4 %>% group_by(AgeGroup, Anticipated.Start.Term.Year,  Admit.Date, Admit) %>% summarise(avg = round(mean(wksBtn,0)), count = sum(count))
+
+```
+
+
+```{r eval=FALSE, fig.width=8, include=FALSE}
+p <- Apps5 %>% 
+filter(Anticipated.Start.Term.Year == "Fall 2017" & AgeGroup == "18 and Under") 
+a <- ggplot(p, aes(x = Admit,
+
+  #forcats::fct_rev(factor(Admit))
+avg
+))+ 
+  geom_boxplot(outlier.colour = "white", outlier.fill = "white", outlier.shape = 0.0001) + 
+  facet_wrap(~AgeGroup, ncol = 1,  scale="free") +
+  # theme_gray() +
+  # xlab("") + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  coord_cartesian(ylim = quantile(Apps5$avg, c(0.1, 0.95)))+
+  facet_wrap(~AgeGroup, ncol = 1)+
+  stat_summary(fun.y = mean, geom = "point", shape = 5, fill = "red", color = "red", size = 1)
+
+q <- Apps5 %>% 
+filter(Anticipated.Start.Term.Year == "Fall 2017" & AgeGroup == "19-25") 
+b <- ggplot(q, aes(x = Admit,
+
+  #forcats::fct_rev(factor(Admit))
+avg
+))+ 
+  geom_boxplot(outlier.colour = "white", outlier.fill = "white", outlier.shape = 0.0001) + 
+  facet_wrap(~AgeGroup, ncol = 1,  scale="free") +
+  # theme_gray() +
+  # xlab("") + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  coord_cartesian(ylim = quantile(Apps5$avg, c(0.1, 0.95)))+
+  facet_wrap(~AgeGroup, ncol = 1)+
+  stat_summary(fun.y = mean, geom = "point", shape = 5, fill = "red", color = "red", size = 1)
+  
+  
+r <- Apps5 %>% 
+filter(Anticipated.Start.Term.Year == "Fall 2017" & AgeGroup == "26 and over") 
+c <- ggplot(r, aes(x = Admit,
+
+  #forcats::fct_rev(factor(Admit))
+avg
+))+ 
+  geom_boxplot(outlier.colour = "white", outlier.fill = "white", outlier.shape = 0.0001) + 
+  facet_wrap(~AgeGroup, ncol = 1,  scale="free") +
+  # theme_gray() +
+  # xlab("") + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  coord_cartesian(ylim = quantile(Apps5$avg, c(0.1, 0.9)))+
+  facet_wrap(~AgeGroup, ncol = 1)+
+  stat_summary(fun.y = mean, geom = "point", shape = 5, fill = "red", color = "red", size = 1)
+p <- ggplotly(a)
+q <- ggplotly(b)
+r <- ggplotly(c)
+a/b/c
+
+```
+
+```{r fig.height=8, fig.width=9}
+Apps6 <- Apps5 %>%
+filter(Anticipated.Start.Term.Year == "Fall 2017")
+p <- ggplot(Apps6, aes(x = Admit,
+
+  #forcats::fct_rev(factor(Admit))
+avg
+))+
+  geom_boxplot(outlier.colour = "white", outlier.fill = "white", outlier.shape = 0.0001) +
+  facet_wrap(~AgeGroup, ncol = 1,  scale="free") +
+  # theme_gray() +
+  # xlab("") +
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  coord_cartesian(ylim = quantile(Apps6$avg, c(0.2, 0.9)))+
+  facet_wrap(~AgeGroup, ncol = 1)+
+  stat_summary(fun.y = mean, geom = "point", shape = 5, fill = "red", color = "red", size = 1)
+
+ggplotly(p)
+
+```
+
+```{r fig.height=8, fig.width=9}
+# Apps6 <- Apps5 %>% 
+# filter(Anticipated.Start.Term.Year == "Fall 2018")
+# p <- ggplot(Apps6, aes(x = Admit,
+# 
+#   #forcats::fct_rev(factor(Admit))
+# avg
+# ))+ 
+#   geom_boxplot(outlier.shape = NA) + 
+#   facet_wrap(~AgeGroup, ncol = 1,  scale="free") +
+#   # theme_gray() +
+#   # xlab("") + 
+#   theme(axis.text.x=element_text(angle=90, hjust=1)) +
+#   coord_cartesian(ylim = quantile(Apps6$avg, c(0.3, 0.9)))+
+#   facet_wrap(~AgeGroup, ncol = 1)+
+#   stat_summary(fun.y = mean, geom = "point", shape = 5, fill = "red", color = "red", size = 1)
+#   
+# ggplotly(p)
+
+```
+
+```{r fig.height=8, fig.width=9}
+# library(Hmisc)
+# Apps6 <- Apps5 %>% 
+# filter(Anticipated.Start.Term.Year == "Fall 2019")
+# p <- ggplot(Apps6, aes(x = Admit,
+# 
+#   #forcats::fct_rev(factor(Admit))
+# avg
+# ))+ 
+#   geom_boxplot(outlier.shape = NA) + 
+#   facet_wrap(~AgeGroup, ncol = 1,  scale="free") +
+#   # theme_gray() +
+#   # xlab("") + 
+#   theme(axis.text.x=element_text(angle=90, hjust=1)) +
+#   coord_cartesian(ylim = quantile(Apps6$avg, c(0.3, 0.9)))+
+#   facet_wrap(~AgeGroup, ncol = 1)+
+#   stat_summary(fun.y = mean, geom = "point", shape = 5, fill = "red", color = "red", size = 1)
+#   
+# ggplotly(p)
+
+```
+
+
+```{r fig.height=8, fig.width=9}
+
+
+
+
+# Apps6 <- Apps5 %>% 
+# filter(Anticipated.Start.Term.Year == "Fall 2020")
+# p <- ggplot(Apps6, aes(x = Admit,
+# 
+#   #forcats::fct_rev(factor(Admit))
+# avg
+# ))+ 
+#   geom_boxplot(outlier.shape = NA, coef = 0
+#     ) + 
+#   facet_wrap(~AgeGroup, ncol = 1,  scale="free") +
+#   # theme_gray() +
+#   # xlab("") + 
+#   theme(axis.text.x=element_text(angle=90, hjust=1)) +
+#   coord_cartesian(ylim = quantile(Apps6$avg, c(0.1, 0.85)))+
+#   facet_wrap(~AgeGroup, ncol = 1)+
+#   stat_summary(fun.y = mean, geom = "point", shape = 5, fill = "red", color = "red", size = 1)
+#   
+# ggplotly(p)
+
+```
+
+
+```{r}
+# ggplot(Apps4_V1, aes(x = Admit, y = Average)) + 
+#   geom_ribbon(aes(ymin=Min,ymax=Max),color="yellow",alpha=0.5) +
+#   geom_line(aes(Average))+ 
+#   theme(axis.text.x=element_text(angle=90, hjust=1))
+# head(Apps4_V1, 1)
+```
+
+```{r fig.height=9, fig.width=9, include=FALSE}
+a <- Apps4_V1 %>%  filter(Anticipated.Start.Term.Year == "Fall 2017")
+a <- ggplot(a) +
+  geom_segment( aes(x=Admit, xend=Admit, y=Min, yend=Max), color="grey") +
+  geom_point( aes(x=Admit, y=Min), color="grey", size=1 ) +
+  geom_point( aes(x=Admit, y=Max), color="#F6A704", size=3 ) +
+  geom_point(aes(x =Admit, y = Average), color = "#002D5D", size = 2)+
+  ggtitle("\n \n \nEnrollment Fall 2017")+
+
+  ylab("Time Between Admit and Deposit in Weeks")+
+  facet_wrap(~AgeGroup, ncol = 1)+ 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 90)) +
+  scale_x_discrete(labels=c("1" = "September", 
+                            "2" = "October",
+                            "3" = "November",
+                            "4" = "December",
+                            "5" = "January",
+                            "6" = "February",
+                            "7" = "March",
+                            "8" = "April",
+                            "9" = "May",
+                            "10" = "June",
+                            "11" = "July",
+                            "12" = "August"
+                            
+                            
+                            
+                            ))
+b <- ggplotly(a)
+
+b %>% layout(xaxis = list(tickvals = c(1:12), ticktext = c("September", "October", "November", "December","January", "February", "March", "April", "May", "June", "July", "August")), margin=list(l = 100), yaxis=list(tickprefix=" ")) + theme_bw()
+  
+```
+
+```{r}
+b
+```
+
+
+```{r fig.height=9, fig.width=9, include=FALSE}
+a <- Apps4_V1 %>%  filter(Anticipated.Start.Term.Year == "Fall 2018")
+a <- ggplot(a) +
+  geom_segment( aes(x=Admit, xend=Admit, y=Min, yend=Max), color="grey") +
+  geom_point( aes(x=Admit, y=Min), color="grey", size=1 ) +
+  geom_point( aes(x=Admit, y=Max), color="#F6A704", size=3 ) +
+  geom_point(aes(x =Admit, y = Average), color = "#002D5D", size = 2)+
+  geom_line(data=Apps4_V1, aes(x = Admit, y = Average, group = Average),color = "#002D5D", size = 0.22)+
+  ggtitle("\n \n \nEnrollment Fall 2018")+
+
+  ylab("Time Between Admit and Deposit in Weeks")+
+  facet_wrap(~AgeGroup, ncol = 1)+ 
+  theme_bw()+ 
+  theme(axis.text.x=element_text(angle=90, hjust=1))+ 
+  scale_x_discrete(labels=c("1" = "September", 
+                            "2" = "October",
+                            "3" = "November",
+                            "4" = "December",
+                            "5" = "January",
+                            "6" = "February",
+                            "7" = "March",
+                            "8" = "April",
+                            "9" = "May",
+                            "10" = "June",
+                            "11" = "July",
+                            "12" = "August"
+                            
+                            
+                            
+                            )) 
+b <- ggplotly(a)
+
+b %>% layout(xaxis = list(tickvals = c(1:12), ticktext = c("September", "October", "November", "December","January", "February", "March", "April", "May", "June", "July", "August")), margin=list(l = 100), yaxis=list(tickprefix=" "))
+  
+```
+
+```{r}
+b
+```
+
+
+```{r fig.height=9, fig.width=9, include=FALSE}
+a <- Apps4_V1 %>%  filter(Anticipated.Start.Term.Year == "Fall 2019")
+a <- ggplot(a) +
+  geom_segment( aes(x=Admit, xend=Admit, y=Min, yend=Max), color="grey") +
+  geom_point( aes(x=Admit, y=Min), color="grey", size=1 ) +
+  geom_point( aes(x=Admit, y=Max), color="#F6A704", size=3 ) +
+  geom_point(aes(x =Admit, y = Average), color = "#002D5D", size = 2)+
+  ggtitle("\n \n \nEnrollment Fall 2019")+
+
+  ylab("Time Between Admit and Deposit in Weeks")+
+  facet_wrap(~AgeGroup, ncol = 1)+ 
+  theme_bw()+ 
+  theme(axis.text.x=element_text(angle=90, hjust=1))+ 
+  scale_x_discrete(labels=c("1" = "September", 
+                            "2" = "October",
+                            "3" = "November",
+                            "4" = "December",
+                            "5" = "January",
+                            "6" = "February",
+                            "7" = "March",
+                            "8" = "April",
+                            "9" = "May",
+                            "10" = "June",
+                            "11" = "July",
+                            "12" = "August"
+                            
+                            
+                            
+                            ))
+b <- ggplotly(a)
+
+b %>% layout(xaxis = list(tickvals = c(1:12), ticktext = c("September", "October", "November", "December","January", "February", "March", "April", "May", "June", "July", "August")), margin=list(l = 100), yaxis=list(tickprefix=" "))
+  
+```
+
+```{r}
+b
+```
+
+
+```{r fig.height=9, fig.width=9, include=FALSE}
+a <- Apps4_V1 %>%  filter(Anticipated.Start.Term.Year == "Fall 2020")
+a <- ggplot(a) +
+  geom_segment( aes(x=Admit, xend=Admit, y=Min, yend=Max), color="grey") +
+  geom_point( aes(x=Admit, y=Min), color="grey", size=1 ) +
+  geom_point( aes(x=Admit, y=Max), color="#F6A704", size=3 ) +
+  geom_point(aes(x =Admit, y = Average), color = "#002D5D", size = 2) +
+  geom_line(aes(x = Admit, y=Average),linetype="dotted")+
+  
+  #geom_line(aes(x = Admit, y = Average), color = "blue" )+
+  ggtitle("\n \n \nEnrollment Fall 2020")+
+
+  ylab("Time Between Admit and Deposit in Weeks")+
+  facet_wrap(~AgeGroup, ncol = 1)+ 
+  theme_bw()+ 
+  theme(axis.text.x=element_text(angle=90, hjust=1))+ 
+  scale_x_discrete(labels=c("1" = "September", 
+                            "2" = "October",
+                            "3" = "November",
+                            "4" = "December",
+                            "5" = "January",
+                            "6" = "February",
+                            "7" = "March",
+                            "8" = "April",
+                            "9" = "May",
+                            "10" = "June",
+                            "11" = "July",
+                            "12" = "August"
+                            
+                            
+                            
+                            )) 
+b <- ggplotly(a)
+
+b %>% layout(xaxis = list(tickvals = c(1:12), ticktext = c("September", "October", "November", "December","January", "February", "March", "April", "May", "June", "July", "August")), margin=list(l = 100), yaxis=list(tickprefix=" "))
+  
+```
+
+```{r}
+b
+```
+
+
+
+ <div class='tableauPlaceholder' id='viz1557279943088' style='position: relative'><noscript><a href='#'><img alt=' ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;YS&#47;YS4SK665J&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='path' value='shared&#47;YS4SK665J' /> <param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;YS&#47;YS4SK665J&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1557279943088');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='800px';vizElement.style.height='627px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script>
+<iframe src="https://public.tableau.com/views/Admission_to_Deposit_Fall_UG_Only/Story1?:language=en&:display_count=y&:origin=viz_share_link" scrolling= "yes"></iframe>

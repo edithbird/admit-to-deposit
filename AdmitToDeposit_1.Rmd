@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Description
+## Description
 
 The purpose of this report is to provide information about the interval that occurs between the date of admission to an undergraduate degree program and the time of confirmation of this admission as defined by the date of deposit. This knowledge will inform future email campaigns using the Journey Builder platform within Marketing Cloud. 
 
@@ -23,7 +23,7 @@ __Traditional Transfers__: 19-25
 
 __Working Adults__: Over 25
 
-# Findings
+## Findings
 
 The time series plot below demonstrates that the admission to deposit flow has remained remarkably consistent over the past three years for an anticipated start in the Fall term. Note that I have excluded Spring ans Summer start terms for this analysis.
 
@@ -32,19 +32,19 @@ The time series plot below demonstrates that the admission to deposit flow has r
 #
 
 
-## Admission Flow
+### Admission Flow
 
 First it is important to examine the temporal differences in admission notification between the three cohorts.  Note: this is not the application date. We see that HS student admissions peak in December and January while Transfers peak a little later. Working Adults have a show a quick spike for January which picks up again in the late summer
 
 ![The admission date flow varies slightly among the three age cohorts. Most admissions happen in  December and January among HS  students. Transfers appear to peak a little later. Working Adults peaks in July/August and January. ](C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/Number of Apps Submitted among Deposited.png)
 
-## Admission to Deposit Interval
+### Admission to Deposit Interval
 
 The plot below illustrates the average length of time that lapses between admissions and deposits among the three cohorts. Unsurprisingly, it corresponds with the deposit deadlines and National Decision Day. Note that this table excludes Admissions that occurred in FY21. 
 
 ![Arranged by months in fiscal year. As one would expect, the avereage number of months between admission and confirmation is largely dependent on the due date of the deposit. ](C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/lollipop.png)
 
-## Average number of months between admission and confirmation
+### Average number of months between admission and confirmation
 
 This final plot demonstrates that although admissions to deposits intervals have remained relatively consistent over the past three fiscal years, FY 20 has brought a longer waiting period among Transfers and Working Adults. This is likely due to the uncertainly that the Covid 19 pandemic has brought.  
 ![The interval between admission and deposit has remained _consistent____ for the last 3 fall starts. ](C:/Users/christine.iyer/Box/FY21 Special Projects/FY21 Admit to Deposit Interval/AverageNumberofMonthsBetween.png)
@@ -55,7 +55,12 @@ This final plot demonstrates that although admissions to deposits intervals have
 ```
 
 
-# Conclusions
+## Conclusions
 
 The data provided in this report should inform Journey Building Experiences.
+
+
+\href{https://www.wrike.com/open.htm?id=539293789}{{\color{blue}{\underline{Wrike Project Details}}}}
+
+\href{https://github.com/edithbird/admit-to-deposit}{{\color{blue}{\underline{Github Repository}}}}
 
